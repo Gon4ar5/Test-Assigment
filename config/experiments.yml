@@ -1,0 +1,15 @@
+button_color:
+  alternatives:
+    - "#FF0000"
+    - "#00FF00"
+    - "#0000FF"
+price:
+  alternatives:
+    - name: "10"
+      percent: 75
+    - name: "20"
+      percent: 10
+    - name: "50"
+      percent: 5
+    - name: "5"
+      percent: 10
