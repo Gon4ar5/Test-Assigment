@@ -1,0 +1,99 @@
+# This workflow uses actions that are not certified by GitHub.  They are
+# provided by a third-party and are governed by separate terms of service,
+# privacy policy, and support documentation.
+#
+# This workflow will install a prebuilt Ruby version, install dependencies, and
+# run tests and linters.
+name: "Ruby on Rails CI"
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:alpine
+        ports: ["6379:6379"]
+        options: --entrypoint redis-server
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
+        with:
+          ruby-version: '3.1.0'
+      - name: Install dependencies
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: bundle install
+      - name: Run specs
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          RAILS_ENV: test
+        run: rspec spec
+  # # Label of the container job
+  # container-job:
+  #   # Containers must run in Linux based operating systems
+  #   runs-on: ubuntu-latest
+  #   # Docker Hub image that `container-job` executes in
+  #   container: node:10.18-jessie
+
+  #   # Service containers to run with `container-job`
+  #   services:
+  #     # Label used to access the service container
+  #     redis:
+  #       # Docker Hub image
+  #       image: redis
+  #       # Set health checks to wait until redis has started
+  #       options: >-
+  #         --health-cmd "redis-cli ping"
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+
+  #   steps:
+  #     # Downloads a copy of the code in your repository before running CI tests
+  #     - name: Check out repository code
+  #       uses: actions/checkout@v2
+
+  #     # Performs a clean installation of all dependencies in the `package.json` file
+  #     # For more information, see https://docs.npmjs.com/cli/ci.html
+  #     - name: Install dependencies
+  #       run: npm ci
+
+  #     - name: Connect to Redis
+  #       # Runs a script that creates a Redis client, populates
+  #       # the client with data, and retrieves data
+  #       run: node client.js
+  #       # Environment variable used by the `client.js` script to create a new Redis client.
+  #       env:
+  #         # The hostname used to communicate with the Redis service container
+  #         REDIS_HOST: redis
+  #         # The default Redis port
+  #         REDIS_PORT: 6379
+  #     - name: Set up Ruby
+  #       uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
+  #       with:
+  #         ruby-version: '3.1.0'
+  #     - name: Install dependencies
+  #       run: bundle install
+  #     - name: Run tests
+  #       run: rspec spec
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
+        with:
+          ruby-version: '3.1.0'
+      - name: Install dependencies
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: bundle install
+      - name: Run rubocop
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: bundle exec rubocop      

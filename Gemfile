@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby "3.2.2"
+ruby "3.1"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 7.0.5"
@@ -56,7 +56,6 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
-  gem 'rspec-rails'
 
   # Add speed badges [https://github.com/MiniProfiler/rack-mini-profiler]
   # gem "rack-mini-profiler"
@@ -72,9 +71,10 @@ group :test do
   gem "webdrivers"
 end
 
+gem 'rspec-rails'
 gem "split", "~> 4.0", require: 'split/dashboard'
 gem 'fabrication'
 gem 'faker'
-gem "factory_bot", "~> 6.2"
-
-gem "factory_girl_rails", "~> 4.9"
+gem "rubocop-github", require: false
+gem "rubocop-performance", require: false
+gem "rubocop-rails", require: false
