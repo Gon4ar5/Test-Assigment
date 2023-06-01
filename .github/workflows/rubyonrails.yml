@@ -52,6 +52,8 @@ jobs:
         env:
           REDIS_URL: redis://localhost:6379/0
           RAILS_ENV: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         run: rspec spec
   docker:
     needs: rspec
