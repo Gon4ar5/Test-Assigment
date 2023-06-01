@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Split.configure do |config|
   config.allow_multiple_experiments = true
 

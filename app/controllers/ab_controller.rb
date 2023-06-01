@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 class AbController < ApplicationController
   def perform_action
     create_experiments(current_user) if current_user.experiments.empty?
-    experiments = current_user.experiments.map do |exp| 
+    experiments = current_user.experiments.map do |exp|
       { name: exp.name, value: exp.value }
     end
-    render json: { experiments: experiments }
+    render json: {experiments:}
   end
 
   def create_experiments(current_user)

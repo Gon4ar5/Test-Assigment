@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source "https://rubygems.org"
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
@@ -71,10 +73,10 @@ group :test do
   gem "webdrivers"
 end
 
-gem 'rspec-rails'
-gem "split", "~> 4.0", require: 'split/dashboard'
-gem 'fabrication'
-gem 'faker'
+gem "fabrication"
+gem "faker"
+gem "rspec-rails"
 gem "rubocop-github", require: false
 gem "rubocop-performance", require: false
 gem "rubocop-rails", require: false
+gem "split", "~> 4.0", require: "split/dashboard"
