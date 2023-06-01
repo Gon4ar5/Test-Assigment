@@ -6,7 +6,7 @@ x-backend:
     context: .
     dockerfile: Dockerfile.dev
   environment:
-    RAILS_ENV: development
+    RAILS_ENV: production
     DB_USERNAME: postgres
     DB_PASSWORD: secret
     DB_HOST: db
