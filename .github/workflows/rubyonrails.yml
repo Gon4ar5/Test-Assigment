@@ -19,9 +19,8 @@ jobs:
         image: postgres:12.1-alpine
         ports: ["5432:5432"]
         env:      
-          POSTGRES_USER: ''
-          POSTGRES_PASSWORD: ''
-          POSTGRES_HOST: ''
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
         image: redis:alpine
@@ -33,9 +32,22 @@ jobs:
         uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
         with:
           ruby-version: '3.1.0'
-      - name: Install dependencies
-        shell: 'script --return --quiet --command "bash {0}"'
-        run: bundle install
+      - name: Install dependent libraries
+        run: sudo apt-get install libpq-dev
+      - name: Bundle install
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+      - name: Setup Database
+        run: |
+          cp config/database.yml.github-actions config/database.yml
+          bundle exec rake db:create
+          bundle exec rake db:schema:load
+        env:
+          RAILS_ENV: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
       - name: Run specs
         env:
           REDIS_URL: redis://localhost:6379/0
