@@ -15,14 +15,15 @@ jobs:
   rspec:
     runs-on: ubuntu-latest
     services:
-      db:
-        image: postgres:11.2
-        environment:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: secret
-        restart: always
-        volumes:
-          - postgres:/var/lib/postgresql/data
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:alpine
         ports: ["6379:6379"]
