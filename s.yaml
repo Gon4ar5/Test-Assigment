@@ -1,0 +1,123 @@
+# This workflow uses actions that are not certified by GitHub.  They are
+# provided by a third-party and are governed by separate terms of service,
+# privacy policy, and support documentation.
+#
+# This workflow will install a prebuilt Ruby version, install dependencies, and
+# run tests and linters.
+name: "Ruby on Rails CI"
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  rspec:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12.1-alpine
+        ports: ["5432:5432"]
+        env:      
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:alpine
+        ports: ["6379:6379"]
+        options: --entrypoint redis-server
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
+        with:
+          ruby-version: '3.1.0'
+      - name: Install dependent libraries
+        run: sudo apt-get install libpq-dev
+      - name: Bundle install
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+      - name: Setup Database
+        run: |
+          cp config/database.yml.github-actions config/database.yml
+          bundle exec rake db:create
+          bundle exec rake db:schema:load
+        env:
+          RAILS_ENV: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+      - name: Run specs
+        env:
+          REDIS_URL: redis://localhost:6379/0
+          RAILS_ENV: test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        run: rspec spec
+
+
+  docker:
+    needs: rspec
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Start containers
+      run: docker-compose -f "docker-compose.yml" up -d --build
+
+    - name: Stop containers
+      if: always()
+      run: docker-compose -f "docker-compose.yml" down
+
+
+  build:
+    name: Build and push image
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Build Image
+      id: build-image
+      uses: actions/checkout@main
+      with:
+        image: my-app
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./Containerfile
+
+    # Podman Login action (https://github.com/redhat-actions/podman-login) also be used to log in,
+    # in which case 'username' and 'password' can be omitted.
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: actions/checkout@main
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: registry-intl.eu-central-1.aliyuncs.com/professional/github
+        username: stas.gon4ar@gmail.com
+        password: ZIBUGA357458stason
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@ee2113536afb7f793eed4ce60e8d3b26db912da4 # v1.127.0
+        with:
+          ruby-version: '3.1.0'
+      - name: Install dependencies
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: bundle install
+      - name: Run rubocop
+        shell: 'script --return --quiet --command "bash {0}"'
+        run: bundle exec rubocop      
