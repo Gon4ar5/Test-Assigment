@@ -55,6 +55,8 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
         run: rspec spec
+
+
   docker:
     needs: rspec
     timeout-minutes: 10
@@ -70,6 +72,39 @@ jobs:
     - name: Stop containers
       if: always()
       run: docker-compose -f "docker-compose.yml" down
+
+
+  build:
+    name: Build and push image
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@main
+
+    - name: Build Image
+      id: build-image
+      uses: actions/checkout@main
+      with:
+        image: my-app
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./Containerfile
+
+    # Podman Login action (https://github.com/redhat-actions/podman-login) also be used to log in,
+    # in which case 'username' and 'password' can be omitted.
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: quay.io/quay-user
+        username: quay-user
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+
+    - name: Print image url
+      run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
+
 
   lint:
     runs-on: ubuntu-latest
